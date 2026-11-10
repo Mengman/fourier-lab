@@ -25,8 +25,8 @@
 <p>换个问法：<strong>这条录音里，有没有一种始终按同样速度重复的起伏？</strong> 每秒重复 1 次叫 1 Hz。实验里的尖声每秒重复 1,000 次，所以我们希望找到并压低 1,000 Hz 附近的成分。</p>
 </div>
 <div class="viewpoints">
-<div><h3>沿时间看</h3><p>横轴是秒。每个点回答「这一刻测到了多少？」适合找停顿、起音和突然出现的响声。</p></div>
-<div><h3>沿频率看</h3><p>横轴是 Hz。每个频点回答「这种速度的波有多强、从哪里开始？」适合找持续的音调。</p></div>
+<div><h3>沿时间看</h3><p>横轴是时间（秒），纵轴是麦克风在那一刻测到的信号值。波形可以用来找停顿、起音和突然出现的响声。</p></div>
+<div><h3>沿频率看</h3><p>横轴是频率（Hz），纵轴是幅度，也就是这段信号里对应频率的波有多强。比如 7 Hz 处的峰越高，表示每秒重复 7 次的成分越强。傅立叶变换还会记录相位，它描述这条波相对于参考波偏移了多少。这里的幅度谱只画幅度。</p></div>
 </div>
 <div class="reading">
 <p>傅立叶变换把同一段信号从第一种坐标换到第二种坐标。如果手里只有原始波形，要怎样查出里面有没有某种速度的波？先把录音简化成几笔能算清楚的数字。</p>
@@ -58,7 +58,7 @@
 </ol>
 <div class="lab"><div class="labhead"><span>实验 01</span><strong>扫过混合波形</strong></div>
 <div class="controls"><label>探针频率 <output id="probeVal"></output><input id="probe" type="range" min="0" max="12" step=".25" value="3"></label><label>7 Hz 分量强度 <output id="mixVal"></output><input id="mix" type="range" min="0" max="1" step=".05" value=".55"></label><label>3 Hz 初相位 <output id="phaseVal"></output><input id="phase" type="range" min="0" max="180" step="15" value="0"></label></div>
-<div class="pair"><figure><figcaption>一秒信号 <span>横轴：秒 · 蓝绿：混合波形 · 紫：探针参考波</span></figcaption><canvas id="wave" width="720" height="300" aria-label="信号和探针波形" role="img"></canvas></figure><figure><figcaption>频谱 <span>横轴：Hz · 橙线：当前探针 · 圆点：整数频点</span></figcaption><canvas id="probePlot" width="720" height="300" aria-label="混合信号幅度谱" role="img"></canvas></figure></div>
+<div class="pair"><figure><figcaption>一秒信号 <span>横轴：时间（秒） · 纵轴：信号值 · 蓝绿：混合波形 · 紫：探针参考波</span></figcaption><canvas id="wave" width="720" height="300" aria-label="信号和探针波形" role="img"></canvas></figure><figure><figcaption>频谱 <span>横轴：频率（Hz） · 纵轴：幅度 · 橙线：当前探针 · 圆点：整数频点</span></figcaption><canvas id="probePlot" width="720" height="300" aria-label="混合信号幅度谱" role="img"></canvas></figure></div>
 <div class="note"><b>试试看</b><p id="probeNote"></p></div></div>
 <details><summary>展开公式 · 两次乘加怎样变成一个复数？</summary>
 <p>取 N 个样本 x[n]，采样率为 fₛ。第 k 个频点的频率是 k·fₛ/N。把 x[n] 分别乘以余弦和负正弦，再沿 n 求和，得到 X[k] 的实部与虚部。</p>
