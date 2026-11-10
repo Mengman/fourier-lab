@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="通过波形、图像和语音实验理解傅立叶变换。">
+<title>傅立叶实验室</title><link rel="stylesheet" href="style.css"><script defer src="lab.js"></script>
+</head>
+<body>
+<header><nav><a class="brand" href="#top"><b>∿</b> 傅立叶实验室</a><div class="navlinks"><a href="#signal">频率探针</a><a href="#image">图像处理</a><a href="#voice">语音处理</a><a href="#code">代码练习</a></div></nav></header>
+<main id="top">
+<section class="hero">
+<div class="wrap herogrid"><div><div class="eyebrow"><span></span> FOURIER LAB &nbsp; / &nbsp; 交互教程</div>
+<h1>把信号拆成<br><em>看得见的频率</em></h1>
+<p>一段声音可以画成起伏的波形，一张照片也可以看成明暗的起伏。傅立叶变换问的是同一个问题：这些起伏里，藏着哪些快慢不同的波？</p>
+<a class="primary" href="#signal">从第一个实验开始 <span>↓</span></a></div>
+<div class="heroart"><div class="instrument"><span>01 &nbsp; SIGNAL</span><span>02 &nbsp; SPECTRUM</span></div><canvas id="heroPlot" width="760" height="440" role="img" aria-label="叠加波形和分离后的频谱"></canvas><div class="instrument"><span>时间域</span><span>频率域</span></div></div></div>
+</section>
+
+<section id="signal" class="wrap chapter">
+<div class="kicker"><b>01</b> THE INTUITION</div><h2>用一把尺子，找一种频率</h2>
+<p class="lead">想象两个人每秒分别拍 3 下和 7 下。用两条平滑的波代表这两种节奏，再把它们叠在一起。现在用一条参考波去对照：每次测一种频率，看乘积加起来会互相抵消，还是留下明显的结果。</p>
+<div class="lab"><div class="labhead"><span>实验 01</span><strong>扫过混合波形</strong></div>
+<div class="controls"><label>探针频率 <output id="probeVal"></output><input id="probe" type="range" min="0" max="12" step=".25" value="3"></label><label>7 Hz 分量强度 <output id="mixVal"></output><input id="mix" type="range" min="0" max="1" step=".05" value=".55"></label><label>3 Hz 初相位 <output id="phaseVal"></output><input id="phase" type="range" min="0" max="180" step="15" value="0"></label></div>
+<div class="pair"><figure><figcaption>一秒信号 <span>蓝绿：混合波形 · 紫：探针参考波</span></figcaption><canvas id="wave" width="720" height="300" aria-label="信号和探针波形" role="img"></canvas></figure><figure><figcaption>频谱 <span>橙线：当前探针 · 圆点：整数频点</span></figcaption><canvas id="probePlot" width="720" height="300" aria-label="混合信号幅度谱" role="img"></canvas></figure></div>
+<div class="note"><b>试试看</b><p id="probeNote"></p></div></div>
+<details><summary>展开公式 · 两次乘加怎样变成一个复数？</summary>
+<p>取 N 个样本 x[n]，采样率为 fₛ。第 k 个频点的频率是 k·fₛ/N。把 x[n] 分别乘以余弦和负正弦，再沿 n 求和，得到 X[k] 的实部与虚部。</p>
+<div class="formula">X[k] = Σₙ x[n] · (cos(2πkn/N) − i·sin(2πkn/N))</div>
+<p>|X[k]| 是复数的长度，arg X[k] 是角度。转动相位滑块时，3 Hz 的幅度不变，但复数的方向会变。这里一秒有 128 个样本，DFT 的频点间隔为 1 Hz。滑块还能试探小数频率，所以橙色标记可以落在整数频点之间。图中正频率的幅度以 2|X[k]|/N 显示，直流项以 |X[0]|/N 显示。</p>
+<p>逆变换把指数的符号改为正号，再除以 N，把所有带幅度和相位的频率分量加回去。FFT 是快速计算 DFT 的算法。连续时间傅立叶变换用积分，这里的数字实验用有限次求和。</p>
+</details></section>
+
+<section id="image" class="wrap chapter">
+<div class="kicker"><b>02</b> SPATIAL FREQUENCY</div><h2>照片里的频率，沿空间变化</h2>
+<p class="lead">从左到右扫过一张图，灰度每变亮再变暗一次，就走过了一轮。宽条纹变化慢，细条纹变化快。图像有横、竖两个方向，所以频谱也需要两条轴。</p>
+<div class="lab"><div class="labhead"><span>实验 02</span><strong>在频谱上做减法</strong></div>
+<div class="controls"><label>输入图像<select id="pattern"><option value="scene">山峦与网格干扰</option><option value="stripes">粗细叠加条纹</option><option value="edges">方块与圆形</option></select></label>
+<label>频域操作<select id="mask"><option value="low">低通 · 保留中心</option><option value="high">高通 · 保留外围</option><option value="notch">陷波 · 去除周期网格</option><option value="all">完整频谱 · 原样重建</option></select></label>
+<label>截止半径 <output id="radiusVal"></output><input id="radius" type="range" min="1" max="91" value="12"></label></div>
+<div class="triple imagegrid"><figure><figcaption>输入 <span>128 × 128</span></figcaption><canvas id="original" width="128" height="128" aria-label="输入灰度图" role="img"></canvas></figure>
+<figure><figcaption>二维频谱 <span>中心为直流</span></figcaption><canvas id="imageSpectrum" width="128" height="128" aria-label="频谱及滤波保留区域" role="img"></canvas></figure>
+<figure><figcaption>逆变换 <span id="imageLabel"></span></figcaption><canvas id="recon" width="128" height="128" aria-label="滤波重建结果" role="img"></canvas></figure></div>
+<div class="note"><b>试试看</b><p id="imageNote"></p></div></div>
+<details><summary>展开公式 · 图像为什么要做两次一维变换？</summary>
+<p>二维基底同时沿 x、y 转动，指数里是 ux/W + vy/H。先对每行做一维 DFT，再对每列做一维 DFT，等价于一次二维 DFT。坐标 (u,v) 表示沿图宽和图高各走过几轮。灰度是实数，所以亮点常成对出现在中心两侧。掩膜要同时改一对点，逆变换才能保持实数。</p>
+<p>频谱图用对数亮度让弱分量也看得见。计算时同时保留复数的实部和虚部。高通结果把零映射为中灰，以显示正负两侧的边缘响应；理想硬截止有时还会产生振铃。</p></details></section>
+
+<section id="voice" class="wrap chapter">
+<div class="kicker"><b>03</b> TIME &amp; FREQUENCY</div><h2>语音里的频率，随时间变化</h2>
+<p class="lead">先听一句话。只做一次整段 FFT，你能知道哪些频率出现过，却很难看出元音在哪一刻切换。把录音切成彼此重叠的短片段，每段各做一次 FFT，就能沿时间排出一张语谱图。</p>
+<div class="lab"><div class="labhead"><span>实验 03</span><strong>听见并看见一段语音</strong></div>
+<div class="controls"><label>音源<select id="audioMode"><option value="clean">普通话 · 合成语音</option><option value="noisy">示例 + 1 kHz 啸声</option><option value="filtered">陷波处理后</option><option value="upload" disabled>本地音频</option></select></label>
+<label>分析窗长 <output id="windowVal"></output><input id="window" type="range" min="8" max="11" step="1" value="9"></label>
+<label>本地音频（最多分析前 8 秒）<input type="file" id="audioFile" accept="audio/*"></label></div>
+<div class="audiobar"><button class="action" id="play" type="button">▶ 播放</button><span id="audioStatus" role="status">加载示例语音…</span></div>
+<figure class="audiofig"><figcaption>语谱图 <span>横轴：时间（秒） · 纵轴：频率（Hz） · 越亮表示幅度越强</span></figcaption><canvas id="spectrogram" width="1000" height="370" aria-label="音频短时傅立叶变换语谱图" role="img"></canvas></figure>
+<div class="audioprobe"><label for="frame">观察时刻 <output id="frameVal"></output></label><input type="range" id="frame" min="0" max="1000" value="300"></div>
+<figure class="audiofig"><figcaption>所选时刻的幅度谱 <span>横轴：Hz · 纵轴：相对幅度（dB）</span></figcaption><canvas id="slice" width="1000" height="230" aria-label="所选时间窗的幅度谱" role="img"></canvas></figure>
+<div class="note"><b>试试看</b><p>切到「示例 + 1 kHz 啸声」听一遍，找贯穿语音的水平亮线。再切到「陷波处理后」比较。对付窄带干扰，只压低附近一小段频率，比切掉整片高频更能保留原来的声音。</p></div></div>
+<details><summary>展开公式 · 窗长如何影响语谱图？</summary>
+<p>这里对每段乘 Hann 窗，让边缘平滑下降，再做 FFT。以 16 kHz 采样率为例，512 个样本覆盖 32 ms，频点间隔约 31.25 Hz。长窗把频点排得更密，能更清楚地分开相近的持续频率，但快速变化会在时间上被抹宽。短窗适合观察发音转折。</p>
+<p>有声元音常出现间隔近似固定的谐波，间隔和基频相关。频谱包络上的宽峰反映声道共振，称为共振峰。练习先找亮的谐波带，再比较「啊、衣、乌」的能量分布。</p></details></section>
+
+<section id="code" class="wrap chapter">
+<div class="kicker"><b>04</b> CODE PRACTICE</div><h2>写几行，把直觉变成代码</h2>
+<p class="lead">每题只补一个函数。用「运行测试」检查几个例子，卡住时可以展开提示和参考答案。</p>
+<div class="lab codebox"><div class="tabbar" aria-label="选择练习"><button data-task="0">01 · 测频率</button><button data-task="1">02 · 图像低通</button><button data-task="2">03 · 语音陷波</button></div>
+<div class="codeinner"><h3 id="taskTitle"></h3><p id="taskText"></p><label class="sr" for="editor">JavaScript 编辑器</label><textarea id="editor" rows="9" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+<div class="audiobar"><button id="run" class="action" type="button">▶ 运行测试</button><button id="reset" class="secondary" type="button">重置这道题</button></div><pre id="testOut" role="status">准备就绪。补完函数后运行测试。</pre>
+<details><summary>查看提示</summary><p id="hint"></p></details><details id="answer"><summary>查看参考答案</summary><pre id="solution"></pre></details></div></div>
+</section>
+</main>
+<footer><div class="wrap"><div class="kicker">FURTHER READING</div><h2>接着读</h2><div class="sources"><a href="https://www.3blue1brown.com/lessons/fourier-transforms/">3Blue1Brown · 用旋转理解傅立叶变换 ↗</a><a href="https://www.cs.cmu.edu/~15322/book/ch05/05.html">CMU · 探针为什么能找到频率 ↗</a><a href="https://docs.opencv.org/4.x/de/dbc/tutorial_py_fourier_transform.html">OpenCV · 图像的二维频谱 ↗</a><a href="https://manual.audacityteam.org/man/spectrogram_view.html">Audacity · 怎样读语谱图 ↗</a></div></div></footer>
+</body></html>
