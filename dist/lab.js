@@ -188,7 +188,31 @@ function image() {
     all:'逆变换将完整的复数频谱还原成输入图像。尝试来回切换低通和高通，看它们分别舍弃了哪些成分。'
   })[mask];
 }
+function heatCoefficient(n, time) {
+  const angle = n * Math.PI;
+  const initial = 2 * (Math.cos(angle/3) - Math.cos(2*angle/3)) / angle;
+  return initial * Math.exp(-angle*angle*time);
+}
+function heat() {
+  const count = +$('heatTerms').value, time = +$('heatTime').value;
+  const coeff = Array.from({length:count}, (_, i) => heatCoefficient(i+1, time));
+  const contribution = (n, x) => (coeff[n-1] ?? 0) * Math.sin(n*Math.PI*x);
+  const points = fn => Array.from({length:361}, (_, i) => [i/360, fn(i/360)]);
+  const target = [[0,0], [1/3,0], [1/3,1], [2/3,1], [2/3,0], [1,0]];
+  const sum = points(x => coeff.reduce((total, _, i) => total + contribution(i+1, x), 0));
+  const axes = {xTicks:[0,.25,.5,.75,1]};
+  plot('heatPlot', [0,1,-.15,1.18], [[target,'#86918a',2],[sum,ink]],
+    {...axes,yTicks:[0,.25,.5,.75,1]});
+  plot('heatModes', [0,1,-.75,.75],
+    [[points(x => contribution(3,x)),violet],[points(x => contribution(1,x)),ink]],
+    {...axes,yTicks:[-.5,-.25,0,.25,.5]});
+  $('heatTermsVal').value = count + ' 项';
+  $('heatTimeVal').value = time.toFixed(3);
+  const third = count >= 3 ? coeff[2].toFixed(3) : '未加入';
+  $('heatNote').textContent = `第 1 项的系数 ${coeff[0].toFixed(3)} · 第 3 项的系数 ${third}。`;
+}
 hero();
+listen(['heatTerms','heatTime'], heat); heat();
 listen(['probe','mix','phase'], signal); signal();
 listen(['pattern','mask','radius'], image); image();
 
